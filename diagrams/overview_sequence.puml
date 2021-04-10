@@ -1,0 +1,34 @@
+@startuml
+FuncAnimation->Simulator: generate(frame n)
+activate Simulator
+loop for ant in ants
+  Simulator->Ant: move()
+  activate Ant
+  alt if not has_food
+    alt if food is_near
+      Ant->Ant: take food
+    else no food is_near
+      alt if food trail is_near
+        Ant->Ant: follow_trail
+      else no food trail is_near
+        Ant->Ant: walk random
+      end
+    end
+  else has_food
+    alt home is_near
+      Ant->Ant: drop food
+    else home not is_near
+      alt if home trail is_near
+        Ant->Ant: follow home trail
+      else no home trail is_near
+        Ant->Ant: walk random
+      end
+    end
+  end
+  Ant-->Simulator: update position
+  deactivate Ant
+end
+Simulator-->FuncAnimation: updated data
+deactivate Simulator
+deactivate FuncAnimation
+@enduml
