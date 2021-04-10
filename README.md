@@ -1,5 +1,6 @@
 # Ants Simulation
 A simulation of the natural behavior of ants.
+
 ![Gif of the Simulation](https://github.com/antonroesler/ants-simulation/blob/main/ant_simulation.gif)
 
 ## About the Project
