@@ -18,20 +18,24 @@ class Simulator:
             self.ants.append(Ant())
     
     def step(self):
+        """
         if len(self.home_trail) > 30000:
             self.home_trail = self.home_trail[-30000:]
         if len(self.food_trail) > 30000:
             self.food_trail = self.food_trail[-30000:]
+        """
         for ant in self.ants:
             ant.forward()
-        
+       
         for ant in self.ants:
+            if ant.pos[0] > 20 or ant.pos[0] < -10 or ant.pos[1] > 20 or ant.pos[1] < -10:
+                self.ants.remove(ant) # Kill ants that are to far away
+                continue
             if not ant.has_food:
                 if ant.reach_object(self.food):
                     ant.has_food = True
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
-                elif ant.in_sight(self.food, turn=True, strong=1.5):
-                    ant.forward() 
+                elif ant.in_sight(self.food, turn=True, strong=1.5): 
                     self.home_trail.append(ant.pos)
                     
                 else:
@@ -46,11 +50,9 @@ class Simulator:
                     ant.has_food = False
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
                 elif ant.in_sight(self.home, turn=True):
-                    ant.forward()
                     self.food_trail.append(ant.pos)
                 else:
                     ant.in_sight(self.home_trail, turn=True)
-                    ant.forward()
                     self.food_trail.append(ant.pos)
     
     def get_ant_pos(self):
@@ -97,7 +99,7 @@ class Ant:
             vector_to_object = object_pos - self.pos
             angle_to_object = self.get_angle_from_vector(vector_to_object)
             distance = np.sqrt(vector_to_object.dot(vector_to_object))
-            if abs(self.angle - angle_to_object) <= 45/distance and distance < 2*strong:
+            if abs(self.angle - angle_to_object) <= 45/distance and distance < 1*strong:
                 if turn:
                     self.turn_towards(angle_to_object)
                 return True
@@ -114,7 +116,7 @@ class Ant:
         return Rot.dot(vector)
 
 s = Simulator()
-s.create_new_ant(n=40)
+s.create_new_ant(n=100)
 
 plt.scatter([],[])
 
@@ -134,5 +136,5 @@ def animate(some):
     plt.scatter(ftx, fty, alpha=0.1, s=4, c="y")
 
 anim = FuncAnimation(plt.gcf(), animate, frames=1000)
-writer = PillowWriter(fps=25) 
-anim.save("demo_sine.gif", writer=writer)
+writer = PillowWriter(fps=50) 
+anim.save("ant_simulation.gif", writer=writer)
