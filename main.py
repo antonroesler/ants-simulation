@@ -4,77 +4,80 @@ import matplotlib.animation as animation
 from random import random, randint, choice
 import math
 import numpy as np
+import pandas as pd
 
-NUMBER_OF_ANTS = 100
-TOTAL_FRAMES = 1000
+import util
+
+NUMBER_OF_ANTS = 10
+TOTAL_FRAMES = 50
 FPS = 30
 TRAILS = True
-
-
-
 TRAIL_FREQUENCY = 4
+
+DATA_STRUCTURE = {"x":[], "y":[], "type":[], "iteration":[]}
+
+class DataStore:
+    def __init__(self):
+        self.df = pd.DataFrame(DATA_STRUCTURE)
+        self.df["iteration"] = self.df["iteration"].astype("int")
+        self.df["type"] = self.df["type"].astype("category")
+    
+    def append(self, x, y, typ, iteration):
+        self.df.append({"x":x, "y":y, "type":typ, "iteration":iteration}, ignore_index=True)
+    
+    def get(self, typ=None, iteration=None):
+        mask = [True] * len(self.df.index)
+        if iteration:
+            mask = (self.df["iteration"] == iteration) 
+        if typ:
+            mask = (self.df["type"] == "ant") & mask
+        return self.df[mask]
+
 
 class Simulator:
     def __init__(self):
-        self.ants = []
         self.food = [[9, 7]]
-        self.home = [0, 0]
-        self.home_trail= []
-        self.food_trail= [[9, 7]]
-        self.iteration = -1
+        self.ants = []
+        self.data = DataStore()
+        self.iteration = 0
     
     def create_new_ant(self, n=1):
         for _ in range(n):
             self.ants.append(Ant())
     
     def step(self):
-        self.iteration += 1
-        """
-        if len(self.home_trail) > 50000:
-            self.home_trail = self.home_trail[-50000:]
-        if len(self.food_trail) > 50000:
-            self.food_trail = self.food_trail[-50000:]
-        """
-       
+        if len(self.ants) < NUMBER_OF_ANTS:
+            self.create_new_ant()
         for ant in self.ants:
             ant.forward()
             if ant.pos[0] > 20 or ant.pos[0] < -10 or ant.pos[1] > 20 or ant.pos[1] < -10:
                 self.ants.remove(ant) # Kill ants that are to far away
                 continue
             if not ant.has_food:
-                if ant.reach_object(self.food):
+                if any(util.close(self.food, ant.getx(), ant.gety(), distance=0.2)): # food muss ein eigener df werden
                     ant.has_food = True
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
-                elif ant.in_sight(self.food, turn=True, strong=1.5) and self.iteration%TRAIL_FREQUENCY == 0: 
-                    self.home_trail.append(ant.pos)
+                elif util.close(self.data.get(typ="food"): 
+                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
                     
                 else:
-                    if ant.in_sight(self.food_trail, turn=True):
+                    if ant.in_sight(self.data.get(typ="food"), turn=True):
                         ant.forward() 
                     else:
                         ant.angle+=randint(-20,20)
-                    if self.iteration%TRAIL_FREQUENCY == 0:
-                        self.home_trail.append(ant.pos)
+                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
                     
             else:
                 if ant.reach_object(self.home):
                     ant.has_food = False
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
-                elif ant.in_sight(self.home, turn=True) and self.iteration%TRAIL_FREQUENCY == 0:
-                    self.food_trail.append(ant.pos)
+                elif ant.in_sight(self.home, turn=True):
+                    self.data.append(ant.pos[0], ant.pos[1], "food", self.iteration)
                 else:
                     ant.in_sight(self.home_trail, turn=True)
-                    if self.iteration%TRAIL_FREQUENCY == 0:
-                        self.food_trail.append(ant.pos)
-    
-    def get_ant_pos(self):
-        xs = []
-        ys = []
-        for ant in self.ants:
-            x,y = ant.pos
-            xs.append(x)
-            ys.append(y)
-        return xs, ys
+                    self.data.append(ant.pos[0], ant.pos[1], "food", self.iteration)
+        self.data.append(ant.pos[0], ant.pos[1], "ant", self.iteration)
+        self.iteration += 1
     
     
 class Ant:
@@ -87,64 +90,35 @@ class Ant:
     def forward(self):
         self.pos = np.add(self.pos, self.get_direction_vector()*self.speed)
     
-    def get_direction_vector(self):
-        x = np.cos(np.radians(self.angle))
-        y = np.sin((np.radians(self.angle)))
-        return np.array([x, y])
-        
-        
-    def get_angle_from_vector(self, vector):
-        x = vector[0]
-        y = vector[1]
-        rad = math.atan2(y, x)
-        return np.degrees(rad) 
+    def getx(self):
+        return self.pos[0]
     
-    def reach_object(self, objects):
-        for object_pos in objects:
-            vector_to_object = object_pos - self.pos
-            if np.sqrt(vector_to_object.dot(vector_to_object)) < 0.2:
-                return True
-        return False
+    def gety(self):
+        return self.pos[1]
     
-    def in_sight(self, objects, turn=False, strong=1):
-        for object_pos in objects:
-            vector_to_object = object_pos - self.pos
-            angle_to_object = self.get_angle_from_vector(vector_to_object)
-            distance = np.sqrt(vector_to_object.dot(vector_to_object))
-            if abs(self.angle - angle_to_object) <= 45/distance and distance < 1*strong:
-                if turn:
-                    self.turn_towards(angle_to_object)
-                return True
-        return False
+    
+
+
     
     def turn_towards(self, angle_to_object):
         self.angle -= (self.angle-angle_to_object)
         
-    def rotate(self, vector, degree):
-        """Rotates the direction. Degree in 360°. NOT IN USE"""
-        theta = np.radians(degree)
-        c, s = np.cos(theta), np.sin(theta)
-        Rot = np.array(((c, -s), (s, c)))
-        return Rot.dot(vector)
 
 s = Simulator()
-num_ants = 0
 plt.scatter([],[])
 
 def animate(some):
-    if len(s.ants) < NUMBER_OF_ANTS:
-        s.create_new_ant()
     plt.cla()
-    s.step()
-    if TRAILS:
-        htx, hty = np.transpose(np.array(s.home_trail))
-        plt.scatter(htx, hty, alpha=0.1, s=4, c="r")
-        ftx, fty = np.transpose(np.array(s.food_trail))
-        plt.scatter(ftx, fty, alpha=0.1, s=4, c="y")
-    x,y = s.get_ant_pos()
     plt.xlim([-1, 10])
     plt.ylim([-1, 10])
-    plt.scatter(x, y, s=10)
+    s.step()
+    if TRAILS:
+        home_trail = s.data.get(typ="home")
+        plt.scatter(home_trail["x"], home_trail["y"], alpha=0.1, s=4, c="r")
+        food_trail = s.data.get(typ="food")
+        plt.scatter(food_trail["x"], food_trail["y"], alpha=0.1, s=4, c="y")
+    ant_data = s.data.get(typ="ant", iteration=s.iteration)
+    plt.scatter(ant_data["x"], ant_data["y"], s=10)
     fx, fy = s.food[0]
     plt.scatter(fx, fy, s=100)
     plt.scatter(0, 0, s=100)
