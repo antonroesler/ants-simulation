@@ -1,9 +1,11 @@
-def centeroid(arr):
+import numpy as np
+import math 
+
+def centeroid(df):
     """Calculates the centeroid (center) of an array of multiple coordinates."""
-    length = arr.shape[0]
-    sum_x = np.sum(arr[:, 0])
-    sum_y = np.sum(arr[:, 1])
-    return sum_x/length, sum_y/length
+    mean_x = df.x.mean()
+    mean_y = df.y.mean()
+    return np.array([mean_x, mean_y])
 
 def rotate(vector, degree):
     """Rotates the direction. Degree in 360°. NOT IN USE"""
@@ -28,6 +30,13 @@ def distance(row, x, y, dist):
     return math.sqrt((float(row[0]) - x)**2 + (float(row[1]) - y)**2) < dist
     
 
-def close(df, x, sum_y, distance=1):
-    mask = df.apply(distance, axis = "columns", args=(x, y, distance))
-    print(df[mask])
+def close(df, x, y, dist=1):
+    mask = df.apply(distance, axis = "columns", args=(x, y, dist))
+    return mask
+
+class Holder:
+    def set(self, value):
+        self.value = value
+        return value
+    def get(self):
+        return self.value
