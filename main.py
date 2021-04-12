@@ -49,59 +49,8 @@ class Simulator:
     
     def step(self):
         for ant in self.ants:
-            if ant.x > 12 or ant.x < -2 or ant.y > 12 or ant.y < -2:
-                self.ants.remove(ant) # Kill ants that are to far away
-                continue
-            if not ant.has_food:
-                if any(util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=0.2)):
-                    ant.has_food = True
-                    ant.angle = (ant.angle + 120) % 360 # turn around 120°
-                
-                elif any(util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)):
-
-                    center = util.centeroid(self.data.get(typ="F")[util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)])
-                    direction_vector = center - ant.get_pos()
-                    angle = util.get_angle_from_vector(direction_vector)
-                    ant.turn_towards(angle)
-                    self.data.append(ant.x, ant.y, "home", self.iteration)
-
-                elif True in util.close(self.data.get(typ="food"), ant.getx(), ant.gety()):
-                    center = util.centeroid(self.data.get(typ="food")[util.close(self.data.get(typ="food"), ant.getx(), ant.gety())])
-                    direction_vector = center - ant.get_pos()
-                    angle = util.get_angle_from_vector(direction_vector)
-                    ant.turn_towards(angle)
-                    self.data.append(ant.x, ant.y, "home", self.iteration)
-                    
-                else:
-                    ant.angle+=randint(-20,20)
-                    self.data.append(ant.x, ant.y, "home", self.iteration)
-                    
-            else:
-                if any(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=0.2)):
-                    ant.has_food = False
-                    ant.angle = (ant.angle + 120) % 360 # turn around 120°
-                
-                elif any(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)):
-                    center = util.centeroid(self.data.get(typ="H")[util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)])
-                    direction_vector = center - ant.get_pos()
-                    angle = util.get_angle_from_vector(direction_vector)
-                    ant.turn_towards(angle)
-                    self.data.append(ant.x, ant.y, "food", self.iteration)
-
-                elif any(util.close(self.data.get(typ="home"), ant.getx(), ant.gety())):
-                    center = util.centeroid(self.data.get(typ="home")[util.close(self.data.get(typ="home"), ant.getx(), ant.gety())])
-                    direction_vector = center - ant.get_pos()
-                    angle = util.get_angle_from_vector(direction_vector)
-                    ant.turn_towards(angle)
-
-                    self.data.append(ant.x, ant.y, "food", self.iteration)
-                    
-                else:
-                    ant.angle+=randint(-20,20)
-                    self.data.append(ant.x, ant.y, "home", self.iteration)
-            ant.forward()
-            self.data.append(ant.x, ant.y, "ant", self.iteration)
-        self.iteration += 1
+            close_objects = util.close(ant.getx(), ant.gety(), self.data.df)
+            
     
     
 class Ant:
@@ -109,7 +58,7 @@ class Ant:
         self.x = 0
         self.y = 0
         self.angle = 45
-        self.speed = 0.05
+        self.speed = 0.2
         self.has_food = False
     
     def forward(self):
@@ -118,6 +67,31 @@ class Ant:
         new_pos = np.add(current_pos, direction_vector*self.speed)
         self.x = new_pos[0]
         self.y = new_pos[1]
+
+    def look_around(self, df):
+        mask_close_objects = util.close(s.data.df, ant.getx(), ant.gety())
+        df_close_objects = self.data.df[mask_close_objects]
+        vls = df_close_objects.type.value_counts()
+        num_H = vls.get("H")
+        num_F = vls.get("F")
+        num_F = vls.get("food")
+        num_F = vls.get("home")
+        if ant.has_food:
+            
+            if num_H:
+                # Go home
+            elif num_home:
+                #follow home trail
+            else:
+                # wlak random
+        else: # Ant has no food
+        if num_F:
+            # Go to Food
+        elif num_food:
+            # Follow food Trail
+        else:
+            # walk random
+            
 
 
     def getx(self):
@@ -164,7 +138,7 @@ def animate(some):
 
 
 
-
-anim = FuncAnimation(plt.gcf(), animate, frames=TOTAL_FRAMES)
-writer = PillowWriter(fps=FPS) 
-anim.save("ant_simulationPANDAS1.gif", writer=writer)
+if __name__ == "__main__":
+    anim = FuncAnimation(plt.gcf(), animate, frames=TOTAL_FRAMES)
+    writer = PillowWriter(fps=FPS) 
+    anim.save("ant_simulationPANDAS1.gif", writer=writer)
