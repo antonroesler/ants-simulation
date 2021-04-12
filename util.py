@@ -3,8 +3,8 @@ import math
 
 def centeroid(df):
     """Calculates the centeroid (center) of an array of multiple coordinates."""
-    mean_x = df.x.mean()
-    mean_y = df.y.mean()
+    mean_x = df["x"].mean()
+    mean_y = df["y"].mean()
     return np.array([mean_x, mean_y])
 
 def rotate(vector, degree):

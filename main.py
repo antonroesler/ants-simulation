@@ -8,8 +8,8 @@ import pandas as pd
 
 import util
 
-NUMBER_OF_ANTS = 10
-TOTAL_FRAMES = 50
+NUMBER_OF_ANTS = 50
+TOTAL_FRAMES = 100
 FPS = 30
 TRAILS = True
 
@@ -43,14 +43,13 @@ class Simulator:
     
     def create_new_ant(self, n=1):
         for _ in range(n):
-            self.ants.append(Ant())
+            ant = Ant()
+            self.ants.append(ant)
+            self.data.append(ant.getx(), ant.gety(), "ant", self.iteration)
     
     def step(self):
-        if len(self.ants) < NUMBER_OF_ANTS:
-            self.create_new_ant()
         for ant in self.ants:
-            ant.forward()
-            if ant.pos[0] > 20 or ant.pos[0] < -10 or ant.pos[1] > 20 or ant.pos[1] < -10:
+            if ant.x > 12 or ant.x < -2 or ant.y > 12 or ant.y < -2:
                 self.ants.remove(ant) # Kill ants that are to far away
                 continue
             if not ant.has_food:
@@ -58,81 +57,92 @@ class Simulator:
                     ant.has_food = True
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
                 
-                elif any(h.set(util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4))):
-                    center = util.centeroid(self.data.get()[h.get()])
-                    direction_vector = center - ant.pos
-                    angle = util.get_angle_from_vector(direction_vector)
-                    ant.turn_towards(angle)
-                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
+                elif any(util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)):
 
-                elif any(h.set(util.close(self.data.get(typ="food"), ant.getx(), ant.gety()))): 
-                    center = util.centeroid(self.data.get()[h.get()])
-                    direction_vector = center - ant.pos
+                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)])
+                    direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
-                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
+                    self.data.append(ant.x, ant.y, "home", self.iteration)
+
+                elif True in util.close(self.data.get(typ="food"), ant.getx(), ant.gety()):
+                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="food"), ant.getx(), ant.gety())])
+                    direction_vector = center - ant.get_pos()
+                    angle = util.get_angle_from_vector(direction_vector)
+                    ant.turn_towards(angle)
+                    self.data.append(ant.x, ant.y, "home", self.iteration)
                     
                 else:
                     ant.angle+=randint(-20,20)
-                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
+                    self.data.append(ant.x, ant.y, "home", self.iteration)
                     
             else:
                 if any(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=0.2)):
                     ant.has_food = False
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
                 
-                elif any(h.set(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4))):
-                    center = util.centeroid(self.data.get()[h.get()])
-                    direction_vector = center - ant.pos
+                elif any(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)):
+                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)])
+                    direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
-                    self.data.append(ant.pos[0], ant.pos[1], "food", self.iteration)
+                    self.data.append(ant.x, ant.y, "food", self.iteration)
 
-                elif any(h.set(util.close(self.data.get(typ="home"), ant.getx(), ant.gety()))): 
-                    center = util.centeroid(self.data.get()[h.get()])
-                    direction_vector = center - ant.pos
+                elif any(util.close(self.data.get(typ="home"), ant.getx(), ant.gety())):
+                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="home"), ant.getx(), ant.gety())])
+                    direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
 
-                    self.data.append(ant.pos[0], ant.pos[1], "food", self.iteration)
+                    self.data.append(ant.x, ant.y, "food", self.iteration)
                     
                 else:
                     ant.angle+=randint(-20,20)
-                    self.data.append(ant.pos[0], ant.pos[1], "home", self.iteration)
-        self.data.append(ant.pos[0], ant.pos[1], "ant", self.iteration)
+                    self.data.append(ant.x, ant.y, "home", self.iteration)
+            ant.forward()
+            self.data.append(ant.x, ant.y, "ant", self.iteration)
         self.iteration += 1
     
     
 class Ant:
     def __init__(self):
-        self.pos = np.array([0,0])
-        self.angle = choice([-45, 0, 45, 90])
+        self.x = 0
+        self.y = 0
+        self.angle = 45
         self.speed = 0.05
         self.has_food = False
     
     def forward(self):
-        self.pos = np.add(self.pos, util.get_direction_vector(self.angle)*self.speed)
-    
+        current_pos = self.get_pos()
+        direction_vector = util.get_direction_vector(self.angle)
+        new_pos = np.add(current_pos, direction_vector*self.speed)
+        self.x = new_pos[0]
+        self.y = new_pos[1]
+
+
     def getx(self):
-        return self.pos[0]
+        return self.x
     
     def gety(self):
-        return self.pos[1]
-    
-    
+        return self.y
 
+    def get_pos(self):
+        return np.array([self.x, self.y])
 
     
     def turn_towards(self, angle_to_object):
         self.angle -= (self.angle-angle_to_object)
-        
 
 s = Simulator()
-s.data.append(0, 0, "H", None)
-s.data.append(9, 7, "F", None)
+s.data.append(0, 0, "H", 0)
+s.data.append(9, 7, "F", 0)
+s.ants.append(Ant())
+s.create_new_ant()
 plt.scatter([],[])
 
 def animate(some):
+    if len(s.ants) < NUMBER_OF_ANTS:
+            s.ants.append(Ant())
     plt.cla()
     plt.xlim([-1, 10])
     plt.ylim([-1, 10])
@@ -148,6 +158,8 @@ def animate(some):
     plt.scatter(food_data["x"], food_data["y"], s=100)
     home_data = s.data.get(typ="H")
     plt.scatter(home_data["x"], home_data["y"], s=100)
+
+
 
 
 anim = FuncAnimation(plt.gcf(), animate, frames=TOTAL_FRAMES)
