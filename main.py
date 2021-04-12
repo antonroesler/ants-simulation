@@ -8,7 +8,7 @@ import pandas as pd
 
 import util
 
-NUMBER_OF_ANTS = 50
+NUMBER_OF_ANTS = 20
 TOTAL_FRAMES = 100
 FPS = 30
 TRAILS = True
@@ -59,14 +59,14 @@ class Simulator:
                 
                 elif any(util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)):
 
-                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)])
+                    center = util.centeroid(self.data.get(typ="F")[util.close(self.data.get(typ="F"), ant.getx(), ant.gety(), dist=1.4)])
                     direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
                     self.data.append(ant.x, ant.y, "home", self.iteration)
 
                 elif True in util.close(self.data.get(typ="food"), ant.getx(), ant.gety()):
-                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="food"), ant.getx(), ant.gety())])
+                    center = util.centeroid(self.data.get(typ="food")[util.close(self.data.get(typ="food"), ant.getx(), ant.gety())])
                     direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
@@ -82,14 +82,14 @@ class Simulator:
                     ant.angle = (ant.angle + 120) % 360 # turn around 120°
                 
                 elif any(util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)):
-                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)])
+                    center = util.centeroid(self.data.get(typ="H")[util.close(self.data.get(typ="H"), ant.getx(), ant.gety(), dist=1.4)])
                     direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
                     self.data.append(ant.x, ant.y, "food", self.iteration)
 
                 elif any(util.close(self.data.get(typ="home"), ant.getx(), ant.gety())):
-                    center = util.centeroid(self.data.get()[util.close(self.data.get(typ="home"), ant.getx(), ant.gety())])
+                    center = util.centeroid(self.data.get(typ="home")[util.close(self.data.get(typ="home"), ant.getx(), ant.gety())])
                     direction_vector = center - ant.get_pos()
                     angle = util.get_angle_from_vector(direction_vector)
                     ant.turn_towards(angle)
@@ -136,6 +136,9 @@ class Ant:
 s = Simulator()
 s.data.append(0, 0, "H", 0)
 s.data.append(9, 7, "F", 0)
+s.data.append(1, 1, "F", 0)
+s.data.append(3, 1, "F", 0)
+s.data.append(1.5, 1, "F", 0)
 s.ants.append(Ant())
 s.create_new_ant()
 plt.scatter([],[])
