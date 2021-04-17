@@ -27,7 +27,7 @@ def get_angle_from_vector(vector):
     return np.degrees(rad) 
 
 def distance(row, x, y, dist):
-    return math.sqrt((float(row[0]) - x)**2 + (float(row[1]) - y)**2) < dist
+    return math.sqrt((float(row["x"]) - x)**2 + (float(row["y"]) - y)**2) < dist
     
 
 def close(df, x, y, dist=1):
