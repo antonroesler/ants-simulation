@@ -9,7 +9,10 @@ def get_angle_from_vector(vector):
     x = vector[0]
     y = vector[1]
     rad = math.atan2(y, x)
-    return np.degrees(rad) 
+    degrees = np.degrees(rad) 
+    if degrees < 0:
+        degrees += 360 # Degrees need to be in range 0 360 but np.degrees returns range -180 180
+    return degrees
 
 
 

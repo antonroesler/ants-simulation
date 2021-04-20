@@ -7,8 +7,8 @@ import numpy as np
 from quadtree import Point, Rectangle, Circle, QuadTree
 import util
 
-NUMBER_OF_ANTS = 100
-TOTAL_FRAMES = 1000
+NUMBER_OF_ANTS = 90
+TOTAL_FRAMES = 1050
 FPS = 30
 TRAILS = True
 
@@ -17,6 +17,7 @@ SIGHT = 2
 AREA = Rectangle(15, 15, 12, 12)
 
 TRAIL_FREQ = 1
+FOOD_DIST_DECR = 0.1
 
 QUADTREE_CAPACITY = 4
 
@@ -24,8 +25,8 @@ QUADTREE_CAPACITY = 4
 class Simulator:
     def __init__(self):
         self.ants = []
-        self.food = Circle(19,17,0.3)
-        self.home = Circle(10,10,0.3)
+        self.food = Circle(19,18,0.2)
+        self.home = Circle(10,10,0.2)
         self.home_trail = QuadTree(AREA, capacity=QUADTREE_CAPACITY)
         self.food_trail = QuadTree(AREA, capacity=QUADTREE_CAPACITY)
         self.iteration = -1
@@ -66,10 +67,11 @@ class Simulator:
                 if self.home.contains(ant):
                     ant.has_food = False
                     ant.angle = 45
-                elif ant.in_sight(self.home): 
+                elif ant.in_sight(self.home, mult=1.75): 
                     ant.turn_towards(self.home.center(), strength=1)
-                    if self.iteration % TRAIL_FREQ == 0:
-                        self.food_trail.insert(ant.point())
+                    #if self.iteration % TRAIL_FREQ == 0:
+                        #self.food_trail.insert(ant.point())
+
                 else:
                     sight = Circle(ant.x, ant.y, SIGHT)
                     home_trail_in_sight = self.home_trail.query_circle(sight)
@@ -114,9 +116,9 @@ class Ant(Point):
                 return True
         return False
     
-    def in_sight(self, obj):
+    def in_sight(self, obj, mult=1):
         """Returns True if an Point or Circle object is within sight of the ant."""
-        sight = Circle(self.x, self.y, SIGHT)
+        sight = Circle(self.x, self.y, SIGHT*mult)
         if isinstance(obj, Circle):
             return sight.intersects(obj)
         elif isinstance(obj, Point):
@@ -151,17 +153,17 @@ def animate(some):
     if TRAILS:
         htx, hty = util.points_to_corr(s.home_trail.all)
         ftx, fty = util.points_to_corr(s.food_trail.all)
-        plt.scatter(htx, hty, alpha=0.05, s=4, c="r")
-        plt.scatter(ftx, fty, alpha=0.05, s=4, c="y")
+        plt.scatter(htx, hty, alpha=0.05, s=2, c="r")
+        plt.scatter(ftx, fty, alpha=0.5, s=2, c="y")
     x,y = s.get_ant_pos()
     plt.xlim([9, 21])
     plt.ylim([9, 21])
-    plt.scatter(x, y, s=10)
-    plt.scatter(s.food.x, s.food.y, s=100)
-    plt.scatter(s.home.x, s.home.y, s=100)
+    plt.scatter(x, y, s=4)
+    plt.scatter(s.food.x, s.food.y, s=50)
+    plt.scatter(s.home.x, s.home.y, s=50)
     if s.iteration % 50 ==0:
         print(f"Iteration: {s.iteration}")
 
 anim = FuncAnimation(plt.gcf(), animate, frames=TOTAL_FRAMES)
 writer = PillowWriter(fps=FPS) 
-anim.save("ant_simulationX1.gif", writer=writer)
+anim.save("ant_simulationX3.gif", writer=writer)
