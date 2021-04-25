@@ -8,11 +8,11 @@ class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-    
+
     def distance(self, other):
         """Returns distance between two points."""
         return math.sqrt((self.x - other.x)**2 + (self.y - other.y)**2)
-    
+
     def pos(self):
         return np.array([self.x, self.y])
 
@@ -24,18 +24,18 @@ class Rectangle:
         self.y = y
         self.w = w
         self.h = h
-    
+
     def contains(self, point:Point):
         """Returns True if the given point lies within the rectangle."""
         return (self.x - self.w/2 <= point.x <= self.x + self.w/2 and self.y - self.h/2 <= point.y <= self.y + self.h/2)
-    
+
     def intersects(self, other):
         """Returns True if the rectangle overlaps with a given other rectangle."""
         return not (
             self.x + self.w/2 < other.x - other.w/2 or other.x + other.w/2 < self.x - self.w/2 or
             self.y - self.h/2 > other.y + other.h/2 or other.y - other.h/2 > self.y + self.h/2
             )
-    
+
     def corners(self):
         """Returns a list of the four corners of the rectangle as Point objects."""
         return [
@@ -51,16 +51,16 @@ class Circle:
         self.x = x
         self.y = y
         self.r = r
-    
+
     def contains(self, point:Point):
         """Returns true if a given Point lies within the circle."""
         return point.distance(Point(self.x, self.y)) < self.r
-    
+
     def intersects(self, circle):
         center_distance = Point(self.x, self.y).distance(Point(circle.x, circle.y))
         radii = self.r + circle.r
         return center_distance < radii
-    
+
     def center(self):
         return Point(self.x, self.y)
 '''
@@ -82,14 +82,12 @@ class QuadTree:
         self.sub_tree = []
         self.counter = 0
         self.all = []
-    
+
     def insert(self, point:Point):
-        if self.counter % 5 ==0:
-            self.all.append(point)
-        self.counter += 1
+        self.all.append(point)
         if not self.area.contains(point):
             return False
-        
+
         if not self.divided:
             if len(self.points) < self.capacity:
                 self.points.append(point)
@@ -98,7 +96,7 @@ class QuadTree:
         else:
             for tree in self.sub_tree:
                 tree.insert(point)
-    
+
     def subdivide(self):
         self.sub_tree.append(QuadTree(Rectangle(self.area.x + self.area.w/4 , self.area.y + self.area.h/4, self.area.w/2, self.area.h/2)))
         self.sub_tree.append(QuadTree(Rectangle(self.area.x + self.area.w/4 , self.area.y - self.area.h/4, self.area.w/2, self.area.h/2)))
@@ -110,7 +108,7 @@ class QuadTree:
             self.insert(point)
         self.points = []
         """
-        
+
 
 
     def query(self, area:Rectangle):
@@ -122,7 +120,7 @@ class QuadTree:
                 for tree in self.sub_tree:
                     points.extend(tree.query(area))
         return points
-    
+
     def query_circle(self, circle:Circle):
         """Returns all points that lie within a givne circle."""
         rectangle = Rectangle(circle.x, circle.y, circle.r, circle.r)
@@ -134,7 +132,7 @@ if __name__ == "__main__":
     r = Rectangle(5, 5, 10, 10)
     qt = QuadTree(r)
     ps = []
-    
+
     for _ in range(100):
         p = Point(random()*10, random()*10)
         qt.insert(p)
