@@ -130,7 +130,6 @@ dmypy.json
 
 .DS*
 .vsc*
-
+.idea
 /results
 /bugs
-
